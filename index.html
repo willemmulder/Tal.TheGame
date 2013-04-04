@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+			.container { }
+		</style>
+		<script src="js/jquery-1.9.0.min.js"></script>
+		<script src="js/tal.js"></script>
+		<script src="js/talCssRenderer.js"></script>
+		<script>
+			$(function() {
+				// Game and renderer
+				var talGame = new TalGame();
+				var talRenderer = new TalCssRenderer($(".board"));
+
+				// Settings
+				talGame.playerCount(2);
+				talGame.boardSize({width:10,length:10});
+
+				// Players
+				var humanPlayer = (function() {
+
+					return {
+						doMove(board, previousMove) {
+							// Notify player that he can move
+							$(".status").html("Your turn");
+							// Wait for player input
+							var deferred = new $.Deferred();
+							talRenderer.on("playerInput", function(move) {
+								deferred.resolve({
+									from : {x:move.from.x, y:move.from.y},
+									to : {x:move.to.x, y:move.to.y}
+								});
+							})
+							return deferred.promise();
+						}
+					}
+				})();
+				talGame.setPlayer(1, )
+
+				talGame.on("playerMoved", function() {
+					// board is array of boardSize.width * boardSize.length
+					var board = talGame.board();
+				});
+
+				// Start the game
+				talGame.start();
+			});
+		</script>
+	</head>
+	<body>
+		<div class='container'>
+			<div class='status'>
+
+			</div>
+			<div class='board'>
+
+			</div>
+		</div>
+		<script>
+			// Analytics
+		</script>
+	</body>
+</html>
