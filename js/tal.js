@@ -13,6 +13,7 @@ function Tal() {
 	// Game stats
 	var gameIsRunning = false;
 	var turnCount = 0;
+	var moves;
 
 	var publics = {
 
@@ -20,7 +21,7 @@ function Tal() {
 			if (count) {
 				playerCount = count;
 			} else {
-				return count;
+				return playerCount;
 			}
 		},
 
@@ -66,7 +67,7 @@ function Tal() {
 			}
 		},
 		playerMove : function() {
-			currentPlayer.doMove();
+			currentPlayer.doMove(board, (moves.length ? moves[moves.length] : false));
 		}
 	}
 
