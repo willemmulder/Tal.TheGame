@@ -2,7 +2,26 @@
 <html>
 	<head>
 		<style>
+
 			.container { }
+
+			.board { position: relative; }
+			.board .tile {
+				width: 50px;
+				height: 50px;
+				position: absolute;
+				background: #eee;
+				transition: background 0.2s ease;
+			}
+
+			.board .tile:hover {
+				background: #ddd;
+			}
+
+			.board .tile.selected {
+				background: #bbb;
+			}
+
 		</style>
 		<script src="js/jquery-1.9.0.min.js"></script>
 		<script src="js/tal.js"></script>
@@ -17,13 +36,17 @@
 				talGame.playerCount(2);
 				talGame.boardSize({width:10,height:10});
 
+				// Error message, if any
+				var error;
+
 				// Players
 				var humanPlayer = (function() {
 
 					return {
-						doMove(board, previousMove) {
+						doMove : function(board, playerIndex, previousMove) {
 							// Notify player that he can move
-							$(".status").html("Your turn");
+							$(".status").html(error || "Your turn, player " + playerIndex);
+							error = null;
 							// Wait for player input
 							var deferred = new $.Deferred();
 							talRenderer.on("playerInput", function(move) {
@@ -36,18 +59,26 @@
 						}
 					}
 				})();
-				talGame.setPlayer(1, humanPlayer);
-				talGame.setPlayer(2, humanPlayer)
+				talGame.player(1, humanPlayer);
+				talGame.player(2, humanPlayer)
 
 				// Ensure rendering after a player moved
-				talGame.on("playerMove", function() {
-					// board is array of boardSize.width * boardSize.length
+				talGame.on("validPlayerMove", function() {
 					var board = talGame.board();
+					// Render board
 					talRenderer.render(board);
 				});
 
+				talGame.on("invalidPlayerMove", function() {
+					error = "That move was invalid. Try again please.";
+				});
+
 				// Start the game
+				// Will automatically create a board of boardSize.width * boardSize.length and let the first player do its move
 				talGame.start();
+
+				// Render first situation
+				talRenderer.render(talGame.board());
 			});
 		</script>
 	</head>
@@ -57,7 +88,7 @@
 
 			</div>
 			<div class='board'>
-
+				
 			</div>
 		</div>
 		<script>
