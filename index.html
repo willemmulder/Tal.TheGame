@@ -15,7 +15,7 @@
 
 				// Settings
 				talGame.playerCount(2);
-				talGame.boardSize({width:10,length:10});
+				talGame.boardSize({width:10,height:10});
 
 				// Players
 				var humanPlayer = (function() {
@@ -36,11 +36,14 @@
 						}
 					}
 				})();
-				talGame.setPlayer(1, )
+				talGame.setPlayer(1, humanPlayer);
+				talGame.setPlayer(2, humanPlayer)
 
-				talGame.on("playerMoved", function() {
+				// Ensure rendering after a player moved
+				talGame.on("playerMove", function() {
 					// board is array of boardSize.width * boardSize.length
 					var board = talGame.board();
+					talRenderer.render(board);
 				});
 
 				// Start the game
