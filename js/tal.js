@@ -197,13 +197,15 @@ function TalGame() {
 			var result = [];
 			if (fromTile.x === toTile.x) {
 				// Range over y, i.e. vertical
-				for(var y = fromTile.y; y < toTile.y; y++) {
-					result.push(someBoard[y][fromTile.x]);
+				var topDownSign = (toTile.y - fromTile.y) / Math.abs(toTile.y - fromTile.y);
+				for(var d = 1; d < Math.abs(fromTile.y - toTile.y); d++) {				
+					result.push(someBoard[fromTile.y+(d*topDownSign)][fromTile.x]);
 				}
 			} else if (fromTile.y === toTile.y) {
 				// Range over y, i.e. vertical
-				for(var x = fromTile.x; x < toTile.x; x++) {
-					result.push(someBoard[fromTile.y][x]);
+				var leftRightSign = (toTile.x - fromTile.x) / Math.abs(toTile.x - fromTile.x);
+				for(var d = 1; d < Math.abs(fromTile.x - toTile.x); d++) {				
+					result.push(someBoard[fromTile.y][fromTile.x+(d*leftRightSign)]);
 				}
 			} else {
 				// Diagonal

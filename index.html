@@ -136,8 +136,9 @@
 					}
 				})();
 
-				talGame.player(1, humanPlayer);
-				talGame.player(2, willemSimpleBot);
+				// Bottom is human player, top is bot
+				talGame.player(1, willemSimpleBot);
+				talGame.player(2, humanPlayer);
 
 				// Ensure rendering after a player moved
 				talGame.on("validPlayerMove", function() {
