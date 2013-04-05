@@ -227,22 +227,48 @@ function TalGame() {
 				}
 			}
 		},
-		dekkingPiecesForPiece : function(targetPiece, piecesForPlayer) {
+		dekkingPiecesForPiece : function(targetPiece, piecesForPlayer, someBoard) {
 			piecesForPlayer = piecesForPlayer || publics.piecesForPlayer(targetPiece.playerIndex);
+			someBoard = someBoard || publics.board();
 			// Get dekking pieces for this piece
 			var dekkingPieces = [];
 			$.each(piecesForPlayer, function(index,elm) {
-				var moveAllowed = publics.moveAllowed(
+				if (!elm.taken) {
+					var moveAllowed = publics.moveAllowed(
 						{x:elm.tile.x, y:elm.tile.y},
 						{x:targetPiece.tile.x, y:targetPiece.tile.y},
-						targetPiece.playerIndex
-				);
-				if (moveAllowed.allowed || moveAllowed.dekking) {
-					// If move is allowed, the piece can reach the targetPiece
-					dekkingPieces.push(elm);
+						targetPiece.playerIndex,
+						someBoard
+					);
+					if (moveAllowed.allowed || moveAllowed.dekking) {
+						// If move is allowed, the piece can reach the targetPiece
+						dekkingPieces.push(elm);
+					}
 				}
 			});
 			return dekkingPieces;
+		},
+		attackingPiecesForPiece : function(targetPiece, otherPlayerPieces, someBoard) {
+			otherPlayerPieces = otherPlayerPieces || publics.piecesForPlayer((targetPiece.playerIndex === 1 ? 2 : 1));
+			someBoard = someBoard || publics.board();
+			// Get attacking pieces for this piece
+			var attackingPieces = [];
+			$.each(otherPlayerPieces, function(index,elm) {
+				if (!elm.taken) {
+					var moveAllowed = publics.moveAllowed(
+							{x:elm.tile.x, y:elm.tile.y},
+							{x:targetPiece.tile.x, y:targetPiece.tile.y},
+							elm.playerIndex,
+							someBoard
+					);
+					if (moveAllowed.allowed) {
+						// If move is allowed, the piece can reach the targetPiece
+						console.log("allowed!");
+						attackingPieces.push(elm);
+					}
+				}
+			});
+			return attackingPieces;
 		},
 		allowedMovesForPiece : function(piece) {
 			// TODO: more efficient please :-)
