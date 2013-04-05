@@ -48,7 +48,7 @@
 		<script>
 			$(function() {
 				// Game and renderer
-				var talGame = new TalGame();
+				window.talGame = new TalGame();
 				var talRenderer = new TalCssRenderer($(".board"));
 
 				// Settings
@@ -60,7 +60,6 @@
 
 				// Players
 				var humanPlayer = (function() {
-
 					return {
 						doMove : function(board, playerIndex, previousMove) {
 							// Notify player that he can move
@@ -79,8 +78,66 @@
 						}
 					}
 				})();
+				var willemSimpleBot = (function() {
+					return {
+						doMove : function(board, playerIndex, previousMove) {
+							var deferred = new $.Deferred();
+							if (error) {
+								$(".status").html(error + ". Whoops, this bot is stupid. This game ends now I guess...");
+								talGame.giveUp(playerIndex);
+								return deferred.promise();
+							}
+							// Notify player that he can move
+							$(".status").html("Computer (player " + playerIndex + ") is moving. His color is");
+							$(".playercolor").html("<div class='tile' playerindex='" + playerIndex + "'></div>");
+							error = null;
+
+							// Strategy:
+							// 1. If we can get the king, do it
+							// 2. If our king is attacked, move it to a safe place
+							// 3. Calculate the 'totalEnemyAttack' and 'totalDekking'. Do the move that minimises the enemy attack and maximizes the dekking
+							// 4. Also take into account those pieces away that are hard attacked but not dekked
+
+							// Get some stats and make a move!
+							var pieces = talGame.piecesForPlayer(playerIndex);
+							// Find out which move leads to the highest 'dekking' (i.e. the cumulative amount of defense for all pieces)
+							var currentTotalDekking = 0;
+							$.each(pieces, function(index,piece) {
+								var dekkingPieces = talGame.dekkingPiecesForPiece(piece);
+								currentTotalDekking += dekkingPieces.length;
+							});
+							var highestMove;
+							var highestMoveDekking = 0;
+							// Try out all moves and calculate highest dekking
+							var currentSituationBoard = talGame.board();
+							$.each(pieces, function(index,piece) {
+								var allowedMoves = talGame.allowedMovesForPiece(piece);
+								$.each(allowedMoves, function(index2, allowedMove) {
+									var newSituation = talGame.situationAfterMove(allowedMove, currentSituationBoard);
+									// For every piece in the new situation, calculate its dekking
+									var newTotalDekking = 0;
+									$.each(newSituation.pieces[playerIndex], function(index3, newSituationPiece) {
+										var dekkingPieces = talGame.dekkingPiecesForPiece(newSituationPiece, newSituation.pieces[playerIndex]);
+										newTotalDekking += dekkingPieces.length;
+									});
+									// If dekking is higher than we encountered thus far, save it
+									if (newTotalDekking > highestMoveDekking) {
+										highestMoveDekking = newTotalDekking;
+										highestMove = allowedMove;
+									}
+								});
+							});
+							// Check highest dekking
+							console.log("CURRENT", currentTotalDekking);
+							console.log("HIGHEST", highestMoveDekking, highestMove);
+							deferred.resolve(highestMove);
+							return deferred.promise();
+						}
+					}
+				})();
+
 				talGame.player(1, humanPlayer);
-				talGame.player(2, humanPlayer)
+				talGame.player(2, willemSimpleBot);
 
 				// Ensure rendering after a player moved
 				talGame.on("validPlayerMove", function() {
@@ -91,6 +148,10 @@
 
 				talGame.on("invalidPlayerMove", function(move, reason) {
 					error = reason + ". Try again please.";
+				});
+
+				talGame.on("aPlayerHasWon", function(playerIndex) {
+					alert("hooray, player " + playerIndex + " has won!");
 				});
 
 				// Start the game
