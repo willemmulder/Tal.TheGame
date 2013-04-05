@@ -101,7 +101,7 @@ function TalCssRenderer(elm) {
 			if (callbacks[callbackName]) {
 				for(var index in callbacks[callbackName]) {
 					var callback = callbacks[callbackName][index];
-					callback.apply(this, Array.prototype.slice.call(arguments,-1));
+					callback.apply(this, Array.prototype.slice.call(arguments,1));
 				}
 			}
 		}

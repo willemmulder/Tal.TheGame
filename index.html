@@ -5,7 +5,7 @@
 
 			* { box-sizing: border-box; }
 
-			.container { }
+			.container { font: 14px verdana, arial, sans-serif; }
 
 			.playercolor {
 				height: 60px;
@@ -64,7 +64,7 @@
 					return {
 						doMove : function(board, playerIndex, previousMove) {
 							// Notify player that he can move
-							$(".status").html(error || "Your turn, player " + playerIndex);
+							$(".status").html(error || "Your turn, player " + playerIndex + ". Your color is");
 							$(".playercolor").html("<div class='tile' playerindex='" + playerIndex + "'></div>");
 							error = null;
 							// Wait for player input
@@ -89,8 +89,8 @@
 					talRenderer.render(board);
 				});
 
-				talGame.on("invalidPlayerMove", function() {
-					error = "That move was invalid. Try again please.";
+				talGame.on("invalidPlayerMove", function(move, reason) {
+					error = reason + ". Try again please.";
 				});
 
 				// Start the game
@@ -104,6 +104,24 @@
 	</head>
 	<body>
 		<div class='container'>
+			<div class='rules'>
+				<p><strong>Tal</strong> is a turn-based game. It is easy to learn (only 4 rules) but quite hard to master.</p>
+				<ol>
+					<li>
+						Each player must move exactly one piece each turn, in a straight line over open (i.e. non-occupied) tiles. It is not allowed to <em>not</em> move at all.
+					</li>
+					<li>
+						The maximum amount of tiles that a piece can be moved, depends on the number on the piece. A 1 can move only 1 tile, but e.g. a 5 can move 1,2,3,4 or 5 tiles.
+					</li>
+					<li>
+						Pieces with an odd number (1,3,5 etc) can only move diagonally while pieces with an even number (2,4,6 etc) can only move vertically or horizontally.
+					</li>
+					<li>
+						Players can take the pieces of other players by ending a <em>forward move</em> on a tile with a piece of the other player. One cannot take pieces by moving their own piece backwards. The only exception is the king, which is a '1' piece that can take pieces by moving forward <em>or</em> backward. If a king itself is taken, the game is over and the player without king loses.
+					</li>
+				</ol>
+			</div>
+			<h2>Try it yourself</h2>
 			<div class='status'>
 
 			</div>
@@ -112,9 +130,16 @@
 			<div class='board'>
 				
 			</div>
+
 		</div>
 		<script>
-			// Analytics
+		  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		  ga('create', 'UA-258109-17', 'github.com');
+		  ga('send', 'pageview');
 		</script>
 	</body>
 </html>

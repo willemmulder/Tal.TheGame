@@ -88,43 +88,62 @@ function TalGame() {
 		moveAllowed : function(from,to,playerIndex) {
 			// fromTile should exist
 			if (!board[from.y] || !board[from.y][from.x]) {
-				console.log("fromTile does not exist");
-				return false;
+				return {
+					allowed:false, 
+					reason:"The source tile does not exist"
+				};
 			}
 			var fromTile = board[from.y][from.x];
 			// toTile should exist
 			if (!board[to.y] || !board[to.y][to.x]) {
-				console.log("toTile does not exist");
-				return false;
+				return {
+					allowed:false, 
+					reason:"The destination tile does not exist"
+				};
 			}
 			var toTile = board[to.y][to.x];
 			// There should be a piece on the From tile
 			if (!fromTile.piece) {
-				console.log("piece on fromTile does not exist");
-				return false;
+				return {
+					allowed:false, 
+					reason:"There is no piece to move"
+				};
 			}
 			var piece = fromTile.piece;
 			// The piece should be owned by the playerIndex' player
 			if (piece.playerIndex !== playerIndex) {
-				console.log("you cannot move pieces of other players");
-				return false;
+				return {
+					allowed:false, 
+					reason:"Only pieces of the current player (" + playerIndex + ") can be moved"
+				};
 			}
 			// Even pieces should move in a straigt line (i.e. either the x or y should remain constant)
 			if (piece.number % 2 == 0 && from.x !== to.x && from.y !== to.y) {
-				return false;
+				return {
+					allowed:false, 
+					reason:"Even pieces can only move vertically or horizontally"
+				};
 			}
 			// Odd pieces should move in a diagonal line (i.e. dx and dy should be equal)
 			if (piece.number % 2 == 1 && Math.abs(from.x - to.x) !== Math.abs(from.y - to.y)) {
-				return false;
+				return {
+					allowed:false, 
+					reason:"Odd pieces can only move diagonally"
+				};
 			}
 			// A piece can only moe as far as its number is counting
 			var steps;
 			if (piece.number % 2 == 1) { steps = Math.abs(from.x - to.x); }
 			if (piece.number % 2 == 0) { steps = Math.abs(from.x - to.x) || Math.abs(from.y - to.y); }
 			if (steps > piece.number) {
-				return false;
+				return {
+					allowed:false, 
+					reason:"A piece cannot be moved further than its number"
+				};
 			}
-			return true;
+			return {
+				allowed:true
+			};
 		}
 	}
 
@@ -180,9 +199,10 @@ function TalGame() {
 				var from = move.from;
 				var to = move.to;
 				// Ensure that move is valid
-				if (!publics.moveAllowed(from,to,currentPlayerIndex)) {
+				var moveAllowed = publics.moveAllowed(from,to,currentPlayerIndex);
+				if (moveAllowed.allowed === false) {
 					// Let the player try another move
-					privates.trigger("invalidPlayerMove", move);
+					privates.trigger("invalidPlayerMove", move, moveAllowed.reason);
 					privates.playerCanMove();
 					return;
 				}
@@ -210,11 +230,11 @@ function TalGame() {
 			}
 			return next;
 		},
-		trigger : function(callbackName, args) {
+		trigger : function(callbackName) {
 			if (callbacks[callbackName]) {
 				for(var index in callbacks[callbackName]) {
 					var callback = callbacks[callbackName][index];
-					callback.apply(this, args);
+					callback.apply(this, Array.prototype.slice.call(arguments,1));
 				}
 			}
 		}
