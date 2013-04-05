@@ -383,9 +383,6 @@ function TalGame() {
 				board[player2Row][player2CenterColumn+index].piece = { type: "n", number: 7+index, playerIndex : 2};
 			}
 
-			// TEST for bot
-			board[8][0].piece = privates.createPiece(2,1,"o");
-
 			// Place pieces in pieces array
 			publics.loopOverTiles(function(row,column,tile) {
 				if (tile.piece) {
