@@ -3,23 +3,42 @@
 	<head>
 		<style>
 
+			* { box-sizing: border-box; }
+
 			.container { }
 
+			.playercolor {
+				height: 60px;
+			}
+
 			.board { position: relative; }
-			.board .tile {
+			.tile {
 				width: 50px;
 				height: 50px;
 				position: absolute;
 				background: #eee;
 				transition: background 0.2s ease;
+				text-align: center;
+				font-size: 26px;
+				line-height: 50px;
+				font-family: verdana, arial, sans-serif;
+				color: #fff;
 			}
 
 			.board .tile:hover {
-				background: #ddd;
+				opacity: 0.5;
 			}
 
-			.board .tile.selected {
-				background: #bbb;
+			.tile.selected {
+				opacity: 0.7;
+			}
+
+			.tile[playerindex="1"] {
+				background: #ff3333;
+			}
+
+			.tile[playerindex="2"] {
+				background: #3333ff;
 			}
 
 		</style>
@@ -46,6 +65,7 @@
 						doMove : function(board, playerIndex, previousMove) {
 							// Notify player that he can move
 							$(".status").html(error || "Your turn, player " + playerIndex);
+							$(".playercolor").html("<div class='tile' playerindex='" + playerIndex + "'></div>");
 							error = null;
 							// Wait for player input
 							var deferred = new $.Deferred();
@@ -86,6 +106,8 @@
 		<div class='container'>
 			<div class='status'>
 
+			</div>
+			<div class='playercolor'>
 			</div>
 			<div class='board'>
 				

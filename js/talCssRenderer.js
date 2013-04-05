@@ -50,9 +50,15 @@ function TalCssRenderer(elm) {
 					}
 					var piece = tile.piece;
 					if (piece) {
-						$tile.attr("playerIndex", piece.playerIndex);
+						$tile.attr("playerindex", piece.playerIndex);
+						if (piece.type === "n") {
+							$tile.html(piece.number);
+						} else {
+							$tile.html(piece.type + piece.number);
+						}
 					} else {
-						$tile.removeAttr("playerIndex");
+						$tile.removeAttr("playerindex");
+						$tile.html("");
 					}
 					if (selectedTile === $tile.get(0)) {
 						$tile.addClass("selected");
