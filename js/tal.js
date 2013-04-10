@@ -1,3 +1,72 @@
+// All Tal functions work on a certain game situation (i.e. context at a given moment)
+// and all Tal Core functions can be provided with such a situation
+// A situation contains
+// - Board
+// - Pieces
+// All other variables like 'moves', 'players' etc are not part of a static game situation, 
+// but of the context that *works* on the game-situation or is the result of a move in a certain game-situation
+function TalGameSituation(board, pieces) {
+
+	var privates = {
+		board : [],
+		pieces : {},
+		boardSize : {},
+		createPiecesFromBoard : function() {
+			this.pieces = {
+				1:[],
+				2:[]
+			};
+			// Calculate pieces from board
+			// Place pieces in pieces array
+			new TalGame().loopOverTiles(function(row,column,tile) {
+				if (tile.piece) {
+					// Add to pieces array
+					privates.pieces[tile.piece.playerIndex].push(tile.piece);
+					// Reference tile from piece (circular!)
+					tile.piece.tile = tile;
+				}
+			}, privates.board);
+		}
+	}
+
+	privates.board = board;
+	// Calculate board-size
+	privates.boardSize = {
+		width: privates.board[0].length,
+		height: privates.board.length
+	}
+	if (pieces) {
+		privates.pieces = pieces;
+	} else {
+		// Calculate pieces from board
+		privates.createPiecesFromBoard();
+	}
+
+	var publics = {
+		board : function(someBoard) {
+			if (someBoard) {
+				privates.board = someBoard;
+				privates.createPiecesFromBoard();
+			} else {
+				return privates.board;
+			}
+		},
+		pieces : function(playerIndex) {
+			if (playerIndex) {
+				return privates.pieces[playerIndex];
+			} else {
+				return privates.piecees;
+			}
+		}
+	}
+
+	return publics;
+}
+
+// Bots go here
+TalGame.bots = {};
+
+
 function TalGame() {
 
 	// Players
@@ -6,12 +75,8 @@ function TalGame() {
 	var currentPlayerIndex;
 	var currentPlayer;
 
-	// Board
-	var boardSize = {width:0,height:0};
-	var board = [];
-
-	// Pieces
-	var pieces = [];
+	// GameSituation
+	var gameSituation;
 
 	// Game stats
 	var gameIsRunning = false;
@@ -22,6 +87,8 @@ function TalGame() {
 	var callbacks = {};
 
 	var publics = {
+
+		bots : TalGame.bots,
 
 		playerCount : function(count) {
 			if (count) {
@@ -48,17 +115,17 @@ function TalGame() {
 			boardSize = size;
 		},
 
-		board : function() {
-			return board;
+		board : function(someBoard) {
+			return gameSituation.board(someBoard);
 		},
 
 		piecesForPlayer : function(playerIndex) {
 			// Return pieces
-			return pieces[playerIndex];
+			return gameSituation.pieces(playerIndex);
 		},
 
 		pieces : function() {
-			return pieces;
+			return gameSituation.pieces;
 		},
 
 		giveUp : function(playerIndex) {
@@ -102,22 +169,23 @@ function TalGame() {
 		},
 
 		moveAllowed : function(from,to,playerIndex,someBoard) {
+			var someBoard = someBoard || publics.board();
 			// fromTile should exist
-			if (!board[from.y] || !board[from.y][from.x]) {
+			if (!someBoard[from.y] || !someBoard[from.y][from.x]) {
 				return {
 					allowed:false, 
 					reason:"The source tile does not exist"
 				};
 			}
-			var fromTile = board[from.y][from.x];
+			var fromTile = someBoard[from.y][from.x];
 			// toTile should exist
-			if (!board[to.y] || !board[to.y][to.x]) {
+			if (!someBoard[to.y] || !someBoard[to.y][to.x]) {
 				return {
 					allowed:false, 
 					reason:"The destination tile does not exist"
 				};
 			}
-			var toTile = board[to.y][to.x];
+			var toTile = someBoard[to.y][to.x];
 			// There should be a piece on the From tile
 			if (!fromTile.piece) {
 				return {
@@ -193,7 +261,7 @@ function TalGame() {
 			};
 		},
 		tilesBetween : function(fromTile, toTile, someBoard) {
-			someBoard = someBoard || board;
+			someBoard = someBoard || publics.board();
 			var result = [];
 			if (fromTile.x === toTile.x) {
 				// Range over y, i.e. vertical
@@ -219,7 +287,7 @@ function TalGame() {
 			return result;
 		},
 		loopOverTiles : function(callback, someBoard) {
-			someBoard = someBoard || board;
+			someBoard = someBoard || publics.board();
 			for(var i = 0; i < boardSize.height; i++) {
 				for (var i2 = 0; i2 < boardSize.width; i2++) {
 					// Execute callback
@@ -250,6 +318,10 @@ function TalGame() {
 		},
 		attackingPiecesForPiece : function(targetPiece, otherPlayerPieces, someBoard) {
 			otherPlayerPieces = otherPlayerPieces || publics.piecesForPlayer((targetPiece.playerIndex === 1 ? 2 : 1));
+			if (targetPiece.playerIndex === otherPlayerPieces[0].playerIndex) {
+				// Attacking our own pieces is silly
+				return [];
+			}
 			someBoard = someBoard || publics.board();
 			// Get attacking pieces for this piece
 			var attackingPieces = [];
@@ -263,7 +335,6 @@ function TalGame() {
 					);
 					if (moveAllowed.allowed) {
 						// If move is allowed, the piece can reach the targetPiece
-						console.log("allowed!");
 						attackingPieces.push(elm);
 					}
 				}
@@ -315,7 +386,7 @@ function TalGame() {
 			return allowedMoves;
 		},
 		situationAfterMove : function(move, someBoard) {
-			someBoard = someBoard || board;
+			someBoard = someBoard || publics.board();
 			// Situation is an object consisting of board and pieces
 			var clonedBoard = publics.cloneBoard(someBoard);
 			var piecesOnClonedBoard = [];
@@ -363,7 +434,9 @@ function TalGame() {
 		createPiece : function(playerIndex,number,type,tile) {
 			return {playerIndex : playerIndex, number: (number||1), type: (type||"n"), tile:tile};
 		},
-		createBoard : function() {
+		createBoard : function(someBoardSize) {
+			boardSize = someBoardSize || boardSize;
+			var board = [];
 			for(var i = 0; i < boardSize.height; i++) {
 				board[i] = [];
 				for (var i2 = 0; i2 < boardSize.width; i2++) {
@@ -373,10 +446,6 @@ function TalGame() {
 			function invertSide(column) {
 				return boardSize.width-1-column;
 			}
-			// Place pieces
-			// TODO: make this work with any amount of players?
-			pieces[1] = [];
-			pieces[2] = [];
 
 			// As many 1s as boardsize.width minus 2 on each side
 			var player1Row = 0;
@@ -411,18 +480,11 @@ function TalGame() {
 				board[player2Row][player2CenterColumn+index].piece = { type: "n", number: 7+index, playerIndex : 2};
 			}
 
-			// Place pieces in pieces array
-			publics.loopOverTiles(function(row,column,tile) {
-				if (tile.piece) {
-					// Add to pieces array
-					pieces[tile.piece.playerIndex].push(tile.piece);
-					// Reference tile from piece (circular!)
-					tile.piece.tile = tile;
-				}
-			});
+			// Create GameSituation
+			gameSituation = new TalGameSituation(board);
 		},
-		playerCanMove : function() {
-			currentPlayer.doMove(board, currentPlayerIndex, (moves.length ? moves[moves.length] : false)).done(function(move) {
+		playerCanMove : function(previousMoveAllowed) {
+			currentPlayer.doMove(publics.board(), currentPlayerIndex, (moves.length ? moves[moves.length] : false), previousMoveAllowed).done(function(move) {
 				// Process move
 				var from = move.from;
 				var to = move.to;
@@ -457,7 +519,7 @@ function TalGame() {
 			return false;
 		},
 		movePiece : function(from,to,someBoard) {
-			someBoard = someBoard || board;
+			someBoard = someBoard || publics.board();
 			var fromTile = someBoard[from.y][from.x];
 			var toTile = someBoard[to.y][to.x];
 			// If the toTile has a piece, it will be taken
