@@ -125,7 +125,7 @@ function TalGame() {
 		},
 
 		pieces : function() {
-			return gameSituation.pieces;
+			return gameSituation.pieces();
 		},
 
 		giveUp : function(playerIndex) {
@@ -502,9 +502,11 @@ function TalGame() {
 				moves.push(move);
 				privates.trigger("validPlayerMove", move);
 				// Check if player has won
-				if (privates.aPlayerHasWon()) {
+				var playerThatWon = privates.aPlayerHasWon();
+				if (playerThatWon !== false) {
 					gameIsRunning = false; // End of game
 					privates.trigger("aPlayerHasWon", currentPlayerIndex);
+					return;
 				}
 				// Let other player move
 				currentPlayerIndex = privates.getNextPlayerIndex();
@@ -515,7 +517,25 @@ function TalGame() {
 			});
 		},
 		aPlayerHasWon : function() {
-			// TODO: implemenet
+			// Check if king is still present
+			var piecesPlayer1 = publics.piecesForPlayer(1);
+			var piecesPlayer2 = publics.piecesForPlayer(2);
+			var returned;
+			$.each(piecesPlayer1, function(index, piece) {
+				if (piece.type === "k" && piece.taken) {
+					returned = 2;
+					return false; // break loop
+				}
+			});
+			$.each(piecesPlayer2, function(index, piece) {
+				if (piece.type === "k" && piece.taken) {
+					returned = 1;
+					return false; // break loop
+				}
+			});
+			if (returned) {
+				return returned;
+			}
 			return false;
 		},
 		movePiece : function(from,to,someBoard) {

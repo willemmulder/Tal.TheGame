@@ -60,7 +60,7 @@ TalGame.bots.willemSimpleBot = function(talGame) {
 			var highestMoveDekking = 0;
 			var lowestTotalForce = 9999999999;
 			var lowestTotalAttack = 9999999999;
-			var highestTotalFactor = -100000; // A combination of dekking, force etc. Higher is better for us
+			var highestTotalImprovement = -100000; // A combination of dekking, force etc, compared to the current situation. Higher is better for us
 
 			var currentSituationBoard = talGame.board();
 			$.each(pieces, function(index,piece) {
@@ -72,7 +72,6 @@ TalGame.bots.willemSimpleBot = function(talGame) {
 					// ==
 					var newTotalForce = 0;
 					var kingPresent = false;
-					// If their king is gone, force is 0!
 					var otherPlayerPieces = newSituation.pieces[playerIndex === 1 ? 2 : 1];
 					$.each(otherPlayerPieces, function(index, piece) {
 						if (!piece.taken) {
@@ -82,9 +81,6 @@ TalGame.bots.willemSimpleBot = function(talGame) {
 							}
 						}
 					});
-					if (!kingPresent) {
-						newTotalForce = 0;
-					}
 					if (newTotalForce < lowestTotalForce) {
 						lowestTotalForce = newTotalForce;
 					}
@@ -111,31 +107,39 @@ TalGame.bots.willemSimpleBot = function(talGame) {
 						var dekkingPieces = talGame.dekkingPiecesForPiece(newSituationPiece, newSituation.pieces[playerIndex], newSituation.board);
 						newTotalDekking += dekkingPieces.length;
 					});
+					if (newTotalDekking > highestMoveDekking) {
+						highestMoveDekking = newTotalDekking;
+					}
 
 					// ==
 					// Total
 					// ==
 					// If total is higher than we encountered thus far, save it
-					// We find totalForce 4 times more important
-					var totalFactor = 
+					// We find totalForce 4 times more important than dekking and currentDekking 2 times more important than dekking
+					var totalImprovement = 
 						(currentTotalForce === 0 ? 0 : (currentTotalForce - newTotalForce)/currentTotalForce*4) + // percentage decrease in other player's force * 4
 						(currentTotalAttack === 0 ? 0 : (currentTotalAttack - newTotalAttack)/currentTotalAttack*2) +
 						// percentage decrease in attack by other player * 2
 						(newTotalDekking - currentTotalDekking)/currentTotalDekking // percentage increase in dekking
-					if (totalFactor > highestTotalFactor) {
-						highestTotalFactor = totalFactor;
+					// If their king is gone, totalFactor is Infinity
+					if (!kingPresent) {
+						totalImprovement = Infinity;
+					}
+					if (totalImprovement > highestTotalImprovement) {
+						highestTotalImprovement = totalImprovement;
 						highestMove = allowedMove;
 					}
 				});
 			});
 			// Check highest dekking
-			//console.log("CURRENT", currentTotalDekking);
-			//console.log("HIGHEST", highestMoveDekking, highestMove);
+			console.log("CURRENT", currentTotalDekking);
+			console.log("HIGHEST", highestMoveDekking);
 			console.log("current force", currentTotalForce);
 			console.log("lowest force", lowestTotalForce);
 			console.log("current attackedBy", currentTotalAttack);
 			console.log("lowest attackedBy", lowestTotalAttack);
 			console.log("best move", highestMove);
+			console.log("best totalFactor", highestTotalImprovement);
 			deferred.resolve(highestMove);
 			return deferred.promise();
 		}
