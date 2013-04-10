@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+
+			* { box-sizing: border-box; }
+
+			.container { font: 14px verdana, arial, sans-serif; }
+
+			.playercolor {
+				height: 60px;
+			}
+
+			.board { position: relative; }
+			.tile {
+				width: 50px;
+				height: 50px;
+				position: absolute;
+				background: #eee;
+				transition: background 0.2s ease;
+				text-align: center;
+				font-size: 26px;
+				line-height: 50px;
+				font-family: verdana, arial, sans-serif;
+				color: #fff;
+			}
+
+			.board .tile:hover {
+				opacity: 0.5;
+			}
+
+			.tile.selected {
+				opacity: 0.7;
+			}
+
+			.tile[playerindex="1"] {
+				background: #ff3333;
+			}
+
+			.tile[playerindex="2"] {
+				background: #3333ff;
+			}
+
+		</style>
+		<script src="js/jquery-1.9.0.min.js"></script>
+		<script src="js/tal.js"></script>
+		<script src="js/talCssRenderer.js"></script>
+		<script>
+			$(function() {
+				// Game and renderer
+				window.talGame = new TalGame();
+				var talRenderer = new TalCssRenderer($(".board"));
+
+				// Settings
+				talGame.playerCount(2);
+				talGame.boardSize({width:10,height:10});
+
+				// Error message, if any
+				var error;
+
+				// Players
+				var testBot = (function() {
+					return {
+						doMove : function(board, playerIndex, previousMove) {
+							var deferred = new $.Deferred();
+							// Never resolve
+							return deferred.promise();
+						}
+					}
+				})();
+
+				// Bottom is human player, top is bot
+				talGame.player(1, testBot);
+				talGame.player(2, testBot);
+
+				// Start the game
+				// Will automatically create a board of boardSize.width * boardSize.length and let the first player do its move
+				talGame.start();
+
+				// Render first situation
+				talRenderer.render(talGame.board());
+
+				// ========
+				// Testing
+				// ========
+
+				// Setting and getting board
+				talGame.boardSize({width:3,height:3});
+				var board = [
+				[
+					{
+						y : 1,
+						x : 1,
+						piece: {
+							number:5,
+							type:"normal",
+							playerIndex:2
+						}
+					},
+					{
+						y : 1,
+						x : 2,
+						piece: {
+							number:2,
+							type:"normal",
+							playerIndex:2
+						}
+					},
+					{
+						y : 1,
+						x : 3
+					},
+				],
+				[],
+				[
+					{
+						y : 3,
+						x : 1,
+						piece: {
+							number:5,
+							type:"normal",
+							playerIndex:1
+						}
+					},
+					{
+						y : 3,
+						x : 2,
+						piece: {
+							number:2,
+							type:"normal",
+							playerIndex:1
+						}
+					},
+					{
+						y : 3,
+						x : 3
+					}
+				]];
+				talGame.board(board);
+				assertEquals(talGame.board(), board);
+
+				// Now check if dekking is properly calculated
+				var dekkingForPiece = talGame.dekkingForPiece()
+
+
+				function assertEquals(var1,var2) {
+					if (var1 === var2) {
+						console.log("OK. var1 equals var2", var1, var2);
+					} else {
+						console.log("NOK. var1 does NOT equal var2", var1, var2);
+					}
+				}
+			});
+		</script>
+	</head>
+	<body>
+		<div class='container'>
+			<div class='test'>
+				
+			</div>
+			<h2>Try it yourself</h2>
+			<div class='status'>
+
+			</div>
+			<div class='playercolor'>
+			</div>
+			<div class='board'>
+				
+			</div>
+
+		</div>
+		<script>
+		  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		  ga('create', 'UA-258109-17', 'github.com');
+		  ga('send', 'pageview');
+		</script>
+	</body>
+</html>
