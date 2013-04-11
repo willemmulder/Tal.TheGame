@@ -255,22 +255,26 @@ function TalGame() {
 					reason:"The path to the destination tile is occupied"
 				}
 			}
-			// Don't take an opponent piece with a backward move
-			var moveDirection; // 1 is downwards, -1 is upwards
-			if (toTile.y < fromTile.y) {
-				moveDirection = -1; // upwards
-			} else if (toTile.y > fromTile.y) {
-				moveDirection = 1; // downwards
-			} else {
-				moveDirection = 0; // on same line
-			}
-			if (toTile.piece && toTile.piece.playerIndex !== playerIndex && gameSituation.playerDirection(piece.playerIndex)*-1 === moveDirection) {
-				return {
-					allowed:false, 
-					reason:"Opponent pieces can only be taken by a forward move"
-				};
-			}
 
+			// Don't take an opponent piece with a backward move
+			// Exceeept, for the king
+			if (piece.type !== "k") {
+				var moveDirection; // 1 is downwards, -1 is upwards
+				if (toTile.y < fromTile.y) {
+					moveDirection = -1; // upwards
+				} else if (toTile.y > fromTile.y) {
+					moveDirection = 1; // downwards
+				} else {
+					moveDirection = 0; // on same line
+				}
+				if (toTile.piece && toTile.piece.playerIndex !== fromTile.piece.playerIndex && gameSituation.playerDirection(fromTile.piece.playerIndex)*-1 === moveDirection) {
+					return {
+						allowed:false, 
+						reason:"Opponent pieces can only be taken by a forward move"
+					};
+				}
+			}
+			
 			// Last rule that makes the difference between a normal 'move' and 'dekking'
 			// There should be NO own piece on the To tile for moving, but there can be for dekking
 			if (toTile.piece && toTile.piece.playerIndex === playerIndex) {
@@ -517,8 +521,8 @@ function TalGame() {
 			// Place kings in the center
 			var player1CenterColumn = Math.floor(boardSize.width/2);
 			var player2CenterColumn = invertSide(player1CenterColumn);
-			board[player1Row][player1CenterColumn].piece = { type: "k", number: 1, playerIndex : 1};
-			board[player2Row][player2CenterColumn].piece = { type: "k", number: 1, playerIndex : 2};
+			board[player1Row][player1CenterColumn].piece = { type: "k", number: 2, playerIndex : 1};
+			board[player2Row][player2CenterColumn].piece = { type: "k", number: 2, playerIndex : 2};
 			// An 7 to the left of the king, if there is place for that
 			if (boardSize.width > 7) {
 				board[player1Row][player1CenterColumn+1].piece = { type: "n", number: 7, playerIndex : 1};
