@@ -11,6 +11,7 @@ function TalGameSituation(board, pieces) {
 		board : [],
 		pieces : {},
 		boardSize : {},
+		playerDirections : {1:1,2:-1}, // 1 is downwards, -1 is upwards
 		createPiecesFromBoard : function() {
 			this.pieces = {
 				1:[],
@@ -56,6 +57,13 @@ function TalGameSituation(board, pieces) {
 				return privates.pieces[playerIndex];
 			} else {
 				return privates.piecees;
+			}
+		},
+		playerDirection : function(playerIndex) {
+			if (playerIndex) {
+				return privates.playerDirections[playerIndex];
+			} else {
+				return privates.playerDirections;
 			}
 		}
 	}
@@ -247,6 +255,22 @@ function TalGame() {
 					reason:"The path to the destination tile is occupied"
 				}
 			}
+			// Don't take an opponent piece with a backward move
+			var moveDirection; // 1 is downwards, -1 is upwards
+			if (toTile.y < fromTile.y) {
+				moveDirection = -1; // upwards
+			} else if (toTile.y > fromTile.y) {
+				moveDirection = 1; // downwards
+			} else {
+				moveDirection = 0; // on same line
+			}
+			if (toTile.piece && toTile.piece.playerIndex !== playerIndex && gameSituation.playerDirection(piece.playerIndex)*-1 === moveDirection) {
+				return {
+					allowed:false, 
+					reason:"Opponent pieces can only be taken by a forward move"
+				};
+			}
+
 			// Last rule that makes the difference between a normal 'move' and 'dekking'
 			// There should be NO own piece on the To tile for moving, but there can be for dekking
 			if (toTile.piece && toTile.piece.playerIndex === playerIndex) {
@@ -297,7 +321,7 @@ function TalGame() {
 		},
 		dekkingPiecesForPiece : function(targetPiece, piecesForPlayer, someBoard) {
 			piecesForPlayer = piecesForPlayer || publics.piecesForPlayer(targetPiece.playerIndex);
-			someBoard = someBoard || publics.board();
+			someBoard = someBoard || publics.board();			
 			// Get dekking pieces for this piece
 			var dekkingPieces = [];
 			$.each(piecesForPlayer, function(index,elm) {
@@ -316,15 +340,42 @@ function TalGame() {
 			});
 			return dekkingPieces;
 		},
-		attackingPiecesForPiece : function(targetPiece, otherPlayerPieces, someBoard) {
+		// Get the pieces that can be attacked by targetPiece
+		attackablePiecesForPiece : function(targetPiece, otherPlayerPieces, someBoard) {
 			otherPlayerPieces = otherPlayerPieces || publics.piecesForPlayer((targetPiece.playerIndex === 1 ? 2 : 1));
 			if (targetPiece.playerIndex === otherPlayerPieces[0].playerIndex) {
 				// Attacking our own pieces is silly
 				return [];
 			}
 			someBoard = someBoard || publics.board();
-			// Get attacking pieces for this piece
-			var attackingPieces = [];
+			// Get the pieces that can be attacked by targetPiece
+			var attackablePieces = [];
+			$.each(otherPlayerPieces, function(index,elm) {
+				if (!elm.taken) {
+					var moveAllowed = publics.moveAllowed(
+							{x:targetPiece.tile.x, y:targetPiece.tile.y},
+							{x:elm.tile.x, y:elm.tile.y},
+							targetPiece.playerIndex,
+							someBoard
+					);
+					if (moveAllowed.allowed) {
+						// If move is allowed, the piece can reach the targetPiece
+						attackablePieces.push(elm);
+					}
+				}
+			});
+			return attackablePieces;
+		},
+		// Get pieces that attack targetPiece
+		attackedByPiecesForPiece : function(targetPiece, otherPlayerPieces, someBoard) {
+			otherPlayerPieces = otherPlayerPieces || publics.piecesForPlayer((targetPiece.playerIndex === 1 ? 2 : 1));
+			if (targetPiece.playerIndex === otherPlayerPieces[0].playerIndex) {
+				// We cannot being attacked by our own pieces
+				return [];
+			}
+			someBoard = someBoard || publics.board();
+			// Get pieces that attack targetPiece
+			var attackedByPieces = [];
 			$.each(otherPlayerPieces, function(index,elm) {
 				if (!elm.taken) {
 					var moveAllowed = publics.moveAllowed(
@@ -335,11 +386,10 @@ function TalGame() {
 					);
 					if (moveAllowed.allowed) {
 						// If move is allowed, the piece can reach the targetPiece
-						attackingPieces.push(elm);
-					}
-				}
+						attackedByPieces.push(elm);
+					}				}
 			});
-			return attackingPieces;
+			return attackedByPieces;
 		},
 		allowedMovesForPiece : function(piece) {
 			// TODO: more efficient please :-)

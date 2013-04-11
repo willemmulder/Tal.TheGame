@@ -77,9 +77,6 @@
 				// Will automatically create a board of boardSize.width * boardSize.length and let the first player do its move
 				talGame.start();
 
-				// Render first situation
-				talRenderer.render(talGame.board());
-
 				// ========
 				// Testing
 				// ========
@@ -89,59 +86,78 @@
 				var board = [
 				[
 					{
-						y : 1,
-						x : 1,
+						y : 0,
+						x : 0,
 						piece: {
 							number:5,
-							type:"normal",
+							type:"n",
 							playerIndex:2
 						}
 					},
 					{
-						y : 1,
-						x : 2,
+						y : 0,
+						x : 1,
 						piece: {
 							number:2,
-							type:"normal",
+							type:"n",
 							playerIndex:2
 						}
 					},
 					{
-						y : 1,
-						x : 3
+						y : 0,
+						x : 2
 					},
 				],
-				[],
+				[
+					{},
+					{},
+					{}
+				],
 				[
 					{
-						y : 3,
-						x : 1,
+						y : 2,
+						x : 0,
 						piece: {
 							number:5,
-							type:"normal",
+							type:"n",
 							playerIndex:1
 						}
 					},
 					{
-						y : 3,
-						x : 2,
+						y : 2,
+						x : 1,
 						piece: {
 							number:2,
-							type:"normal",
+							type:"n",
 							playerIndex:1
 						}
 					},
 					{
-						y : 3,
-						x : 3
+						y : 2,
+						x : 2
 					}
 				]];
 				talGame.board(board);
 				assertEquals(talGame.board(), board);
 
-				// Now check if dekking is properly calculated
-				var dekkingForPiece = talGame.dekkingForPiece()
+				// Render first situation
+				talRenderer.render(talGame.board());
 
+				var targetPiece = board[0][0].piece;
+				var targetPiece2 = board[0][1].piece;
+				var allPieces = talGame.piecesForPlayer(targetPiece.playerIndex);
+				var allOtherPlayerPieces = talGame.piecesForPlayer(targetPiece.playerIndex == 2 ? 1 : 2);
+				// Now check if dekking is properly calculated
+				var dekkingForPiece = talGame.dekkingPiecesForPiece(targetPiece, allPieces);
+				assertEquals(dekkingForPiece.length, 1);
+				assertEquals(dekkingForPiece[0], board[0][1].piece);
+
+				// Check if attack is properly calculated
+				var attackingPiecesForPiece = talGame.attackablePiecesForPiece(targetPiece, allOtherPlayerPieces);
+				assertEquals(attackingPiecesForPiece.length, 0);
+				var attackingPiecesForPiece2 = talGame.attackablePiecesForPiece(targetPiece2, allOtherPlayerPieces);
+				assertEquals(attackingPiecesForPiece2.length, 1);
+				assertEquals(attackingPiecesForPiece2[0], board[2][1].piece);
 
 				function assertEquals(var1,var2) {
 					if (var1 === var2) {
