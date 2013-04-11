@@ -154,6 +154,11 @@ function TalGame() {
 			privates.playerCanMove();
 		},
 
+		stop : function() {
+			// No more moves will be given to players
+			gameIsRunning = false; 
+		},
+
 		on : function(callbackName, callback) {
 			callbacks[callbackName] = callbacks[callbackName] || [];
 			callbacks[callbackName].push(callback);
@@ -538,37 +543,41 @@ function TalGame() {
 			gameSituation = new TalGameSituation(board);
 		},
 		playerCanMove : function(previousMoveAllowed) {
-			currentPlayer.doMove(publics.board(), currentPlayerIndex, (moves.length ? moves[moves.length] : false), previousMoveAllowed).done(function(move) {
-				// Process move
-				var from = move.from;
-				var to = move.to;
-				// Ensure that move is valid
-				var moveAllowed = publics.moveAllowed(from,to,currentPlayerIndex);
-				if (moveAllowed.allowed === false) {
-					// Let the player try another move
-					privates.trigger("invalidPlayerMove", move, moveAllowed.reason);
-					privates.playerCanMove();
-					return;
-				}
-				privates.movePiece(from,to);
-				// Indicate that player has moved
-				turnCount++;
-				moves.push(move);
-				privates.trigger("validPlayerMove", move);
-				// Check if player has won
-				var playerThatWon = privates.aPlayerHasWon();
-				if (playerThatWon !== false) {
-					gameIsRunning = false; // End of game
-					privates.trigger("aPlayerHasWon", currentPlayerIndex);
-					return;
-				}
-				// Let other player move
-				currentPlayerIndex = privates.getNextPlayerIndex();
-				currentPlayer = players[currentPlayerIndex];
-				privates.playerCanMove();
-			}).fail(function() {
-				privates.trigger("error", "Player move did not execute");
-			});
+			if (gameIsRunning) {
+				currentPlayer.doMove(publics.board(), currentPlayerIndex, (moves.length ? moves[moves.length] : false), previousMoveAllowed).done(function(move) {
+					// Process move
+					var from = move.from;
+					var to = move.to;
+					// Ensure that move is valid
+					var moveAllowed = publics.moveAllowed(from,to,currentPlayerIndex);
+					if (moveAllowed.allowed === false) {
+						// Let the player try another move
+						privates.trigger("invalidPlayerMove", move, moveAllowed.reason);
+						privates.playerCanMove();
+						return;
+					}
+					privates.movePiece(from,to);
+					// Indicate that player has moved
+					turnCount++;
+					moves.push(move);
+					privates.trigger("validPlayerMove", move);
+					// Check if player has won
+					var playerThatWon = privates.aPlayerHasWon();
+					if (playerThatWon !== false) {
+						gameIsRunning = false; // End of game
+						privates.trigger("aPlayerHasWon", currentPlayerIndex);
+						return;
+					}
+					// Let other player move
+					currentPlayerIndex = privates.getNextPlayerIndex();
+					currentPlayer = players[currentPlayerIndex];
+					setTimeout(function() {
+						privates.playerCanMove();
+					}, 100);
+				}).fail(function() {
+					privates.trigger("error", "Player move did not execute");
+				});
+			}
 		},
 		aPlayerHasWon : function() {
 			// Check if king is still present

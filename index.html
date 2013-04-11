@@ -61,8 +61,8 @@
 				// Error message, if any
 				var error;
 
-				// Players
-				var humanPlayer = (function() {
+				// Human player
+				var humanPlayer = function() {
 					return {
 						doMove : function(board, playerIndex, previousMove) {
 							// Notify player that he can move
@@ -80,18 +80,47 @@
 							return deferred.promise();
 						}
 					}
-				})();
-				var willemSimpleBot = new TalGame.bots.willemSimpleBot(talGame);
+				};
 
-				// Bottom is human player, top is bot
+				// Determine users
+				var players = $.extend({}, TalGame.bots, {'human':humanPlayer});
+				var playeroptions = [];
+				$.each(players, function(botname, bot) {
+					playeroptions.push(botname);
+				});
+				function renderPlayerOptions(selected) {
+					var html = "";
+					$.each(playeroptions, function(index, botname) {
+						html += "<option value='" + botname + "' " + (botname === selected ? "selected='selected'" : "") + ">" + botname + "</option>";
+					});
+					return html;
+				}
+				$('.player1options').html(renderPlayerOptions('willemSimpleBot'));
+				$('.player2options').html(renderPlayerOptions('human'));
+				$('.start').click(function() {
+					var player1 = players[$('.player1options').val()];
+					var player2 = players[$('.player2options').val()];
+					talGame.player(1,  new player1(talGame)  );
+					talGame.player(2,  new player2(talGame)  );
+					talGame.start();
+					// Render first situation
+					talRenderer.render(talGame.board());
+				});
+
+				// Bottom is human player, top is the willemSimpleBot by default
+				var humanPlayerInstance = new humanPlayer(talGame);
+				var willemSimpleBot = new TalGame.bots.willemSimpleBot(talGame);
 				talGame.player(1, willemSimpleBot);
-				talGame.player(2, humanPlayer);
+				talGame.player(2, humanPlayerInstance);
 
 				// Ensure rendering after a player moved
 				talGame.on("validPlayerMove", function() {
 					var board = talGame.board();
 					// Render board
 					talRenderer.render(board);
+					// Let player make a move
+					// Let us decide that?
+					// talGame.playerCanMove(); ?
 				});
 
 				talGame.on("invalidPlayerMove", function(move, reason) {
@@ -131,6 +160,12 @@
 				</ol>
 			</div>
 			<h2>Try it yourself</h2>
+			<p>
+				Bottom player <select class='player2options'><option value='human'>human</option></select> versus Top player <select class='player1options'></select>
+			</p>
+			<p>
+				<button class='start'>start</button>
+			</p>
 			<div class='status'>
 
 			</div>
