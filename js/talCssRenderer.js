@@ -21,11 +21,11 @@ function TalCssRenderer(elm) {
 			publics.reRender();
 			privates.trigger("playerInput", {
 				from : {
-					x : fromTile.attr("column"), 
+					x : fromTile.attr("column"),
 					y : fromTile.attr("row")
 				},
 				to : {
-					x : toTile.attr("column"), 
+					x : toTile.attr("column"),
 					y : toTile.attr("row")
 				}
 			});
@@ -38,11 +38,25 @@ function TalCssRenderer(elm) {
 			for (var rowIndex in board) {
 				var row = board[rowIndex];
 				for (var columnIndex in row) {
-					var tile = row[columnIndex];
+
+                    var tile = row[columnIndex];
 					var $tile = canvas.find(".row_"+rowIndex+".column_"+columnIndex);
 					if (!$tile.length) {
-						$tile = $("<div>").addClass("tile").addClass("row_"+rowIndex).addClass("column_"+columnIndex);
-						$tile.attr("column", columnIndex);
+
+                        if(columnIndex%2 == 0 && rowIndex%2 == 0) {
+                         $tile = $("<div>").addClass("tile").addClass("eventile").addClass("row_"+rowIndex).addClass("column_"+columnIndex);
+                        }
+                        if(columnIndex%2 == 0 && rowIndex%2 != 0) {
+                         $tile = $("<div>").addClass("tile").addClass("oddtile").addClass("row_"+rowIndex).addClass("column_"+columnIndex);
+                        }
+                        if(columnIndex%2 != 0 && rowIndex%2 == 0) {
+                         $tile = $("<div>").addClass("tile").addClass("oddtile").addClass("row_"+rowIndex).addClass("column_"+columnIndex);
+                        }
+                        if(columnIndex%2 != 0 && rowIndex%2 != 0) {
+                         $tile = $("<div>").addClass("tile").addClass("eventile").addClass("row_"+rowIndex).addClass("column_"+columnIndex);
+                        }
+
+                        $tile.attr("column", columnIndex);
 						$tile.attr("row", rowIndex);
 						$tile.css("left", columnIndex*50 + "px");
 						$tile.css("top", rowIndex*50 + "px");
